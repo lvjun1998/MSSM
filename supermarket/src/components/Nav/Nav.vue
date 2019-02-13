@@ -20,12 +20,24 @@
         </el-submenu>
         <!-- 导航三 -->
         <el-submenu index="3">
-            <template slot="title"><i class="el-icon-goods"></i>商品管理</template>
-                <el-menu-item index="/goodsmanage">商品管理</el-menu-item>
-                <el-menu-item index="/goodsadd">添加商品</el-menu-item>
+            <template slot="title"><i class="el-icon-tickets"></i>分类管理</template>
+                <el-menu-item index="/classadd">添加分类</el-menu-item>
+                <el-menu-item index="/classmanage">分类管理</el-menu-item>
         </el-submenu>
         <!-- 导航四 -->
         <el-submenu index="4">
+            <template slot="title"><i class="el-icon-goods"></i>商品管理</template>
+                <el-menu-item index="/goodsmanage">商品列表</el-menu-item>
+                <el-menu-item index="/goodsadd">添加商品</el-menu-item>
+        </el-submenu>
+        <!-- 导航五 -->
+        <el-submenu index="5">
+            <template slot="title"><i class="el-icon-document"></i>进货管理</template>
+                <el-menu-item index="/inventoryadd">添加库存</el-menu-item>
+                <el-menu-item index="/inventorylist">库存列表</el-menu-item>
+        </el-submenu>
+        <!-- 导航六 -->
+        <el-submenu index="6">
             <template slot="title"><i class="el-icon-date"></i>统计管理</template>
                 <el-menu-item index="/salestatistics">销售统计</el-menu-item>
         </el-submenu>
