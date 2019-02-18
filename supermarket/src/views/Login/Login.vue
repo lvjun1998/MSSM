@@ -32,6 +32,9 @@
     </div>
 </template>
 <script>
+// 引入qs
+import qs from 'qs';
+
 export default {
   data() {
     // 包含特殊字符的函数
@@ -103,6 +106,12 @@ export default {
           // 自定义验证函数
           { required: true, validator: checkPass, trigger: "blur" }
         ]
+        /* 
+        验证规则字段说明：
+            { required: true/false 必填,   message: "错误的提示信息", trigger: "触发验证的方式" }
+            { min: 最小长度, max: 最大长度, message: "错误的提示信息", trigger: "触发验证的方式" }
+            { validator： 自定义验证规则函数名，  trigger: 'blur'}
+        */
       }
     };
   },
@@ -113,18 +122,42 @@ export default {
       this.$refs[formName].validate(valid => {
         // 如果所有验证通过 valid就是true
         if (valid) {
-          alert("前端验证通过 可以提交给后端！");
-          // 后续就可以把收集的账号和密码 一起发送给后端 验证用户名和密码的正确性。
+
           // 收集账号和密码
           let params = {
             username: this.loginForm.username,
             password: this.loginForm.password
           };
 
-          // 发送请求 把参数发给后端（把用户名和密码发给后端 验证是否正确）
-          //  console.log(params)
-          // 直接跳转到后端主页
-          this.$router.push("/");
+          // 发送请求 把参数发给后端（把用户名和密码发给后端 验证是否存在这个账号）
+          this.axios.post('http://127.0.0.1:666/login/checklogin', qs.stringify(params))
+            .then(response => {
+              // 接收后端返回的数据
+              let {error_code, reason, token, username} = response.data;
+              // 判断
+              if (error_code === 0) {
+                // 把token存在浏览器的本地存储中
+                window.localStorage.setItem('token', token);
+                // 把用户名存入本地存储
+                window.localStorage.setItem('username', username);
+
+                // 弹成功提示
+                this.$message({
+                  type: 'success',
+                  message: reason
+                })
+                // 跳转到后端首页
+                this.$router.push('/');
+              } else {
+                // 弹失败提示
+                this.$message.error(reason);
+              }
+
+            })
+            .catch(err => {
+              console.log(err)
+            })
+          
         } else {
           // 否则就是false
           alert("前端验证失败 不能提交给后端！");

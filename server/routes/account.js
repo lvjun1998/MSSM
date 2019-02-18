@@ -169,5 +169,45 @@ router.get('/batchdelete', (req, res) => {
     }
   })
 })
+/* 
+  验证旧密码是否正确 /checkOldPwd
+*/
+router.get('/checkOldPwd', (req, res) => {
+  // 接收前端传过来的旧密码
+  let { oldPwd, username } = req.query;
+  // 构造sql
+  const sqlStr = `select * from account where username='${username}' and password='${oldPwd}'`;
+  // 执行sql
+  connection.query(sqlStr, (err, data) => {
+    if (err) throw err;
+    if (data.length) { // 如果查询出数据 证明正确
+      res.send({"error_code": 0, "reason":"旧密码正确!"});
+    } else { // 否则就是不正确
+      res.send({"error_code": 1, "reason":"旧密码错误!"})
+    }
+  })
+})
+
+/* 
+  保存新密码路由  /savenewpwd
+*/
+router.post('/savenewpwd', (req, res) => {
+  // 接收参数
+  let {username, oldPassword, newPassword} = req.body;
+  // 构造sql
+  const sqlStr = `update account set password='${newPassword}' where username='${username}' and password='${oldPassword}'`;
+  // 执行sql
+  connection.query(sqlStr, (err, data) => {
+    if (err) throw err;
+    // 判断
+    if (data.affectedRows > 0) {
+      // 成功
+      res.send({"error_code": 0, "reason":"密码修改成功!请重新登录!"})
+    } else {
+      // 失败
+      res.send({"error_code": 1, "reason":"密码修改失败!"})
+    }
+  })
+})
 
 module.exports = router;

@@ -4,7 +4,7 @@
             <el-col :span="12">
                 <div  class="title">
                     <i class="el-icon-menu"></i>
-                    管理系统
+                    华联超市管理系统
                 </div>
             </el-col>
             <el-col :span="12">
@@ -12,14 +12,16 @@
                     <el-row>
                         <el-col :span="18">
                             欢迎您! 
-                            <el-dropdown>
-                            <span class="username el-dropdown-link">
-                                {{ username }}<i class="el-icon-arrow-down el-icon--right"></i>
-                            </span>
-                            <el-dropdown-menu slot="dropdown">
-                                <el-dropdown-item>个人中心</el-dropdown-item>
-                                <el-dropdown-item>退出</el-dropdown-item>
-                            </el-dropdown-menu>
+                            <el-dropdown @command="handleCommand">
+                                <!-- 名字 -->
+                                <span class="username el-dropdown-link">
+                                    {{ username }}<i class="el-icon-arrow-down el-icon--right"></i>
+                                </span>
+                                <!-- 下拉菜单 -->
+                                <el-dropdown-menu slot="dropdown">
+                                    <el-dropdown-item command="personal">个人中心</el-dropdown-item>
+                                    <el-dropdown-item command="logout">退出</el-dropdown-item>
+                                </el-dropdown-menu>
                             </el-dropdown>
                         </el-col>
                         <el-col :span="6">
@@ -37,9 +39,32 @@
 export default {
     data () {
         return {
-            username: "lvjun",
+            username: "",
             avatarUrl: 'http://127.0.0.1:8080/avatar.jpg'
         }
+    },
+    methods: {
+        handleCommand (command) {
+            // 如果点击的是退出
+            if (command === 'logout') {
+                // 清除token
+                window.localStorage.removeItem('token');
+
+                // 弹出提示
+                this.$message({
+                    type: 'success',
+                    message: '注销成功'
+                })
+                setTimeout(() => {
+                    // 跳转到登录页面
+                    this.$router.push('/login')
+                }, 1000)
+            }
+        }
+    },
+    created () {
+        // 显示当前登录的用户
+        this.username = window.localStorage.getItem('username');
     }
 }
 </script>
