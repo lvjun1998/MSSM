@@ -59,6 +59,23 @@
                         </template>
                     </el-table-column>
                 </el-table>
+                                <!-- 分页 -->
+                <div style="margin-top: 20px; text-align: left;">
+                   <el-pagination
+                      @size-change="handleSizeChange"
+                      @current-change="handleCurrentChange"
+                      :current-page="currentPage"
+                      :page-sizes="[1, 3, 5, 10, 20, 50]"
+                      :page-size="pageSize"
+                      layout="total, sizes, prev, pager, next, jumper"
+                      :total="total">
+                  </el-pagination>
+                </div>
+                                <!-- 批量删除按钮 & 取消选择按钮 -->
+                <div style="margin-top: 20px; text-align: left;">
+                  <el-button @click="batchDelete">批量删除</el-button>
+                  <el-button @click="cancelSelect()">取消选择</el-button>
+                </div>
                 <!-- 修改的弹出模态框 -->
                 <el-dialog title="账号修改" width="400px" :visible.sync="flag">
                   <!-- 回填表单 -->
@@ -104,32 +121,143 @@ export default {
         usergroup: ""
       },
       editId: "", // 要修改的数据的id
-      selectedAccount: [] // 被选中的账号数据
+      selectedAccount: [], // 被选中的账号数据
+      currentPage: 1, // 当前页
+      total: 0, // 数据总条数
+      pageSize: 3 // 每页条数
     };
   },
   // 生命周期的钩子函数 created 自动触发 vue组件实例对象创建完成 dom还没有绑定 这个函数里面适合发送ajax请求 获取数据
   created() {
     // 自动发送请求 获取所有用户账号数据 （只要一进入这个组件 就自动发送请求）
     // this.getAccountList();
-    this.getAccountList();
+    this.getAccountListByPage();
   },
   // 方法
   methods: {
-    handleSelectionChange(val) {
-      // 把被选中的账号 保存到一个变量中
-      this.selectedAccount = val;
-    },
     // 请求所有账号数据的函数
-    getAccountList() {
+    // getAccountList() {
+    //   this.axios
+    //     .get("http://127.0.0.1:666/account/accountlist")
+    //     .then(response => {
+    //       // 把后端返回的账号数据 赋值给用户账号表格数据accountTableData
+    //       this.accountTableData = response.data;
+    //     })
+    //     .catch(err => {
+    //       console.log(err);
+    //     });
+    // },
+    getAccountListByPage() {
+      // 收集当前页码 和 每页显示条数
+      let pageSize = this.pageSize;
+      let currentPage = this.currentPage;
+
+      // 发送ajax请求 把分页数据发送给后端
       this.axios
-        .get("http://127.0.0.1:666/account/accountlist")
+        .get("http://127.0.0.1:666/account/accountlistbypage", {
+          params: {
+            pageSize,
+            currentPage
+          }
+        })
         .then(response => {
-          // 把后端返回的账号数据 赋值给用户账号表格数据accountTableData
-          this.accountTableData = response.data;
+          // 接收后端返回的数据总条数 total 和 对应页码的数据 data
+          let { total, data } = response.data;
+
+          // 赋值给对应的变量即可
+          this.total = total;
+          this.accountTableData = data;
+
+          // 如果当前页没有数据 且 排除第一页 (解决删除完当前页数据 卡在当前页码的问题)
+          if (!data.length && this.currentPage !== 1) {
+            // 页码减去 1
+            this.currentPage -= 1;
+            // 再调用自己
+            this.getAccountListByPage();
+          }
         })
         .catch(err => {
           console.log(err);
         });
+    },
+    handleSelectionChange(val) {
+      // 把被选中的账号 保存到一个变量中
+      this.selectedAccount = val;
+    },
+    // 每页显示条数改变 就会触发这个函数
+    handleSizeChange(val) {
+      // 保存每页显示的条数
+      this.pageSize = val;
+      // 调用分页函数
+      this.getAccountListByPage();
+    },
+    // 当前页码改变 就会触发这个函数
+    handleCurrentChange(val) {
+      // 保存当前页码
+      this.currentPage = val;
+      // 调用分页函数
+      this.getAccountListByPage();
+    },
+    // 批量删除
+    batchDelete() {
+      // 收集需要删除的账号的id（勾选几个 就是几个 数据类型应该是一个数组）
+      let selectedId = this.selectedAccount.map(v => v.id);
+
+      // 如果用户什么都不选
+      if (!selectedId.length) {
+        this.$message.error("请选择以后再操作!");
+        return;
+      }
+
+      // 确认框
+      this.$confirm("你确定要删除吗？", "删除提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          // 发送ajax 把需要删除账号数据的id发送给后端
+          this.axios
+            .get(`http://127.0.0.1:666/account/batchdelete`, {
+              params: {
+                selectedId
+              }
+            })
+            .then(response => {
+              // 接收错误码和提示信息
+              let { error_code, reason } = response.data;
+              // 判断
+              if (error_code === 0) {
+                // 成功
+                // 弹出成功提示
+                this.$message({
+                  type: "success",
+                  message: reason
+                });
+                // 刷新列表
+                this.getAccountListByPage();
+              } else {
+                // 失败
+                // 弹出失败的提示
+                this.$message.error(reason);
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        })
+        // 如果是取消 就执行catch
+        .catch(() => {
+          // 弹出取消删除的提示
+          this.$message({
+            type: "info",
+            message: "已取消删除"
+          });
+        });
+    },
+    // 取消选中
+    cancelSelect() {
+      this.$refs.multipleTable.clearSelection();
     },
     // 删除账号函数
     handleDelete(id) {
@@ -155,7 +283,7 @@ export default {
                   message: reason
                 });
                 // 刷新列表（再次调用请求所有用户账号的函数 由于之前已经删除了 所以再次请求 得到的是删除后的数据）
-                this.getAccountList();
+                this.getAccountListByPage();
               } else {
                 // 弹出删除失败的提示
                 this.$message.error(reason);
@@ -220,7 +348,7 @@ export default {
               message: reason
             });
             // 刷新列表（重新请求所有账号数据）
-            this.getAccountList();
+            this.getAccountListByPage();
           } else {
             // 弹出失败的提示
             this.$message.error(reason);

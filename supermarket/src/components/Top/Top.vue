@@ -4,20 +4,29 @@
             <el-col :span="12">
                 <div  class="title">
                     <i class="el-icon-menu"></i>
-                    华联超市管理系统
+                    管理系统
                 </div>
             </el-col>
             <el-col :span="12">
                 <div class="top-right">
                     <el-row>
                         <el-col :span="18">
-                            <span class="username"></span>
+                            欢迎您! 
+                            <el-dropdown>
+                            <span class="username el-dropdown-link">
+                                {{ username }}<i class="el-icon-arrow-down el-icon--right"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item>个人中心</el-dropdown-item>
+                                <el-dropdown-item>退出</el-dropdown-item>
+                            </el-dropdown-menu>
+                            </el-dropdown>
                         </el-col>
                         <el-col :span="6">
-
-
+                            <div class="avatar">
+                                <img width="100%" height="100%" :src="avatarUrl" alt="">
+                            </div>
                         </el-col>
-                        {{ username }} 
                     </el-row>
                 </div>
             </el-col>
@@ -29,6 +38,7 @@ export default {
     data () {
         return {
             username: "lvjun",
+            avatarUrl: 'http://127.0.0.1:8080/avatar.jpg'
         }
     }
 }
